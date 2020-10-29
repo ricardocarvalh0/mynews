@@ -30,7 +30,7 @@ export default function Posts() {
                         <div className={`${styles.container}`}>
                             <h4 className={`${getBGcolor(relevance)}`}><b>{fonte} | {formatDistanceToNow(create_at)}</b>
                             </h4>
-                            <p>{message.split('**')[1]}</p>
+                            <p>{message}</p>
                             <p><a href={link} target="_blank">{link} </a></p>
                         </div>
                     </div>
