@@ -16,7 +16,8 @@ const duration = (d) => {
     return `${intHours}h${minutes}m`
 }
 export default function Ethernity() {
-    const { data } = useSWR('/api/airdrop', fetcher, { refreshInterval: 30000 });
+    // const { data } = useSWR('/api/airdrop', fetcher, { refreshInterval: 30000 });
+    const data = {};
     const newusers = data?.newusers || '...';
     const signups = data?.signups || '...';
     const denials = data?.denials || '...';
