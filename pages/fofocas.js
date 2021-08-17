@@ -1,30 +1,83 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import formatDistanceToNow from 'date-fns/formatDistanceToNow'
-import useSWR from "swr";
+import useSWR, {mutate} from "swr";
 import styles from '../styles.module.css'
+import {formatDistance} from "date-fns";
+import {ptBR} from "date-fns/locale";
 
 const fetcher = (...args) => fetch(...args).then(res => {
     return res.json()
 })
 
-const start = 1628089200000;
-
-const duration = (d) => {
-    const hours = d / 1000 / 60 / 60;
-    const intHours = parseInt(hours, 10);
-    const minutes = parseInt((hours - intHours) * 60, 10);
-    return `${intHours}h${minutes}m`
-}
 export default function Ethernity() {
-    const { data } = useSWR('/api/approve', fetcher, { refreshInterval: 30000 });
-    console.log({data});
+    const [loading, setLoading] = useState(false);
+    const {data} = useSWR('/api/fofocas/list', fetcher, {refreshInterval: 30000});
     const fofocas = data?.fofocas || [];
     return (
         <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
             {fofocas.map(f =>
-                <div style={{ padding: '1.5rem'}}>
-                    <div>criado: {new Date(f.createdAt).toLocaleString()}</div>
-                    <div>texto: {f.content}</div>
+                <div key={f._id} style={{padding: '1.5rem', width: '40%', border: 'solid 1px grey', fontFamily: 'Avenir Next'}}>
+                    <div style={{fontStyle: 'italic'}}>({formatDistance(new Date(f.createdAt), new Date(), { locale: ptBR })})</div>
+                    <div style={{marginTop: '1rem'}}><img alt={f.autor} width={50} height={50} style={{objectFit: 'contain'}} src={f.autorImg}/></div>
+                    <div>{f.autor} - <a href={`https://instagram.com/${f.autorInsta.replace('@', '')}`} target="_blank">{f.autorInsta}</a> - ( {f.autorEmail} )</div>
+                    <div style={{marginTop: '1rem'}}><strong>texto:</strong> {f.content}</div>
+                    <div
+                        style={{
+                            textAlign: 'center',
+                            paddingTop: '1rem',
+                            display: 'flex',
+                            justifyContent: 'space-evenly',
+                        }}
+                    >
+                        {!f.approved && (
+                            <button
+                                style={{border: '2px solid green', cursor: 'pointer'}}
+                                onClick={() => {
+                                    setLoading(true);
+                                    mutate('/api/fofocas/list', async old => {
+                                        // let's update the todo with ID `1` to be completed,
+                                        // this API returns the updated data
+                                        await fetch(`/api/fofocas/approve`, {
+                                            method: 'PATCH',
+                                            body: JSON.stringify({id: f._id})
+                                        })
+                                        setLoading(false);
+                                        return {
+                                            ...old,
+                                            fofocas: old.fofocas.map(d => ({
+                                                ...d,
+                                                approved: d._id === f._id ? true : d.approved
+                                            }))
+                                        }
+                                    })
+                                }}
+                            >
+                                {loading ? '...': 'Apagar'}
+                            </button>
+                        )}
+                        <button
+                            style={{border: '2px solid red', cursor: 'pointer'}}
+                            onClick={() => {
+                                setLoading(true)
+                                mutate('/api/fofocas/list', async old => {
+                                    // let's update the todo with ID `1` to be completed,
+                                    // this API returns the updated data
+                                    await fetch(`/api/fofocas/delete`, {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({id: f._id})
+                                    })
+                                    setLoading(false);
+                                    return {
+                                        ...old,
+                                        fofocas: old.fofocas.filter(d => d._id !== f._id)
+                                    }
+                                })
+                            }}
+                        >
+                            {loading ? '...': 'Apagar'}
+                        </button>
+                    </div>
+
                 </div>
             )}
         </div>

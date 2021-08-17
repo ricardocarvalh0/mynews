@@ -1,14 +1,16 @@
-import {connectToDatabase} from "../../util/mongodb";
+import { ObjectID } from 'mongodb'
+import {connectToDatabase } from "../../../util/mongodb";
 
 export default async (req, res) => {
     const {db} = await connectToDatabase();
-    console.log('req.aaaaaa', req.query.url);
+    const b = JSON.parse(req.body);
+    console.log('approve', { b });
     try {
         const fofocas = await db
             .collection("posts")
-            .find({approved: false}).toArray();
+            .updateOne({ _id: ObjectID(b.id) }, { $set: {approved: true} })
 
-        console.log('found posts', {fofocas});
+        console.log('approved post', {fofocas});
         res.json({ok: true, fofocas});
     } catch (err) {
         console.log('api erro', err);
