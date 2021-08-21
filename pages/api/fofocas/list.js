@@ -8,25 +8,6 @@ export default async (req, res) => {
             .collection("posts")
             .aggregate([
                 {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'firebaseId',
-                        foreignField: 'firebaseId',
-                        as: 'autor'
-                    }
-                }, {
-                    $unwind: {
-                        path: '$autor'
-                    }
-                }, {
-                    $addFields: {
-                        autor: '$autor.name',
-                        autorImg: '$autor.photoURL',
-                        autorEmail: '$autor.email',
-                        autorInsta: '$autor.insta',
-                    }
-                },
-                {
                     $sort: { createdAt: -1 }
                 },
                 {
