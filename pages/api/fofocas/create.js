@@ -6,7 +6,7 @@ export default async (req, res) => {
     const b = JSON.parse(req.body);
     console.log('approve', { b });
     try {
-        await db
+        const newpost = await db
             .collection("posts")
             .save({
                 content: b.content,
@@ -14,7 +14,22 @@ export default async (req, res) => {
                 approved: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-            })
+            });
+
+        await db.collection("postcomments").save({
+            post: newpost.ops[0]._id,
+            comments: [],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        await db.collection("postreactions").save({
+            post: newpost.ops[0]._id,
+            likes: [],
+            dislikes: [],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
 
         // console.log('approved post', {fofocas});
         res.json({ok: true});
