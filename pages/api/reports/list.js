@@ -8,6 +8,9 @@ export default async (req, res) => {
             .collection("userreports")
             .aggregate([
                 {
+                  $match: { seen: { $ne: true } }
+                },
+                {
                     $sort: {createdAt: -1}
                 },
                 {
@@ -39,7 +42,7 @@ export default async (req, res) => {
             ])
             .toArray();
 
-        console.log('found reports', {reports});
+        // console.log('found reports', {reports});
         res.json({ok: true, reports});
     } catch (err) {
         console.log('api erro', err);
