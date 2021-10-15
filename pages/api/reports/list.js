@@ -7,12 +7,6 @@ export default async (req, res) => {
         const reports = await db
             .collection("userreports")
             .aggregate([{
-                $match: {
-                    seen: {
-                        $ne: true
-                    }
-                }
-            }, {
                 $sort: {
                     createdAt: -1
                 }
@@ -52,10 +46,6 @@ export default async (req, res) => {
             }, {
                 $addFields: {
                     active: '$active.approved'
-                }
-            }, {
-                $match: {
-                    'active': true
                 }
             }])
             .toArray();

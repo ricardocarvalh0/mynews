@@ -11,7 +11,7 @@ const fetcher = (...args) => fetch(...args).then(res => {
 
 export default function Reports() {
     const [loading, setLoading] = useState(false);
-    const {data, mutate} = useSWR('/api/reports/list', fetcher, {
+    const {data, mutate, revalidate } = useSWR('/api/reports/list', fetcher, {
         refreshInterval: 60000,
     });
     // console.log('render', data);
@@ -20,7 +20,7 @@ export default function Reports() {
     }
     return (
         <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
-            { loading && (
+            {loading && (
                 <div>Atualizando...</div>
             )}
             {data.reports.map(report =>
@@ -29,11 +29,12 @@ export default function Reports() {
                     style={{
                         width: '50%',
                         display: 'flex',
-                        border: 'solid 1px grey',
+                        border: 'solid 1px black',
                         fontFamily: 'Avenir Next',
                         alignItems: 'center',
                         flexDirection: 'column',
                         padding: '1.5rem',
+                        backgroundColor: report.active ? 'white' : 'grey'
                     }}
                 >
                     <div
@@ -66,45 +67,79 @@ export default function Reports() {
                             </div>
                             <div>{report.to.name}</div>
                             <div style={{fontSize: 12}}>{report.to.firebaseId}</div>
+                            {!report.active && (<div style={{fontSize: 12, color: 'pink', fontWeight: 400, letterSpacing: 1.2}}>desativado</div>)}
                             <div>
-                                <button
-                                    style={{margin: '1rem'}}
-                                    onClick={() => {
-                                        const b = confirm('Tem certeza?');
-                                        if (b) {
-                                            setLoading(true);
-                                            mutate(async old => {
-                                                const res = await fetch(`/api/users/disable`, {
-                                                    method: 'POST',
-                                                    body: JSON.stringify({uid: report.to.firebaseId})
-                                                }).catch(() => old)
-                                                if (!res.ok) {
-                                                    setLoading(false);
-                                                    alert('Deu erro');
-                                                    return old;
-                                                }
-                                                const resp = await res.json();
-                                                if (!resp.ok) {
-                                                    setLoading(false);
-                                                    alert('Deu erro');
-                                                    return old;
-                                                }
+                                {report.active ? (
+                                    <button
+                                        style={{margin: '1rem'}}
+                                        onClick={() => {
+                                            const b = confirm('Tem certeza?');
+                                            if (b) {
+                                                setLoading(true);
+                                                mutate(async old => {
+                                                    const res = await fetch(`/api/users/disable`, {
+                                                        method: 'POST',
+                                                        body: JSON.stringify({uid: report.to.firebaseId})
+                                                    }).catch(() => old)
+                                                    if (!res.ok) {
+                                                        setLoading(false);
+                                                        alert('Deu erro');
+                                                        return old;
+                                                    }
+                                                    const resp = await res.json();
+                                                    if (!resp.ok) {
+                                                        setLoading(false);
+                                                        alert('Deu erro');
+                                                        return old;
+                                                    }
 
-                                                setLoading(false);
-                                                alert('Banido. Desative a conta no firebase.');
-                                                console.log({ resp, before: old })
-                                                const after = {
-                                                    ...old,
-                                                    reports: old.reports.filter(({ to }) => to.firebaseId !== report.to.firebaseId)
-                                                };
-                                                console.log({ after })
-                                                return after
-                                            }, true);
-                                        }
-                                    }}
-                                >
-                                    Desativar
-                                </button>
+                                                    setLoading(false);
+                                                    alert('Desativado.');
+                                                    await revalidate();
+                                                    console.log({resp, before: old})
+                                                    return old
+                                                }, true);
+                                            }
+                                        }}
+                                    >
+                                        Desativar
+                                    </button>
+                                ) : (
+                                    <button
+                                        style={{margin: '1rem'}}
+                                        onClick={() => {
+                                            const b = confirm('Tem certeza?');
+                                            if (b) {
+                                                setLoading(true);
+                                                mutate(async old => {
+                                                    const res = await fetch(`/api/users/enable`, {
+                                                        method: 'POST',
+                                                        body: JSON.stringify({uid: report.to.firebaseId})
+                                                    }).catch(() => old)
+                                                    if (!res.ok) {
+                                                        setLoading(false);
+                                                        alert('Deu erro');
+                                                        return old;
+                                                    }
+                                                    const resp = await res.json();
+                                                    if (!resp.ok) {
+                                                        setLoading(false);
+                                                        alert('Deu erro');
+                                                        return old;
+                                                    }
+
+                                                    setLoading(false);
+                                                    alert('Ativado.');
+                                                    await revalidate();
+                                                    console.log({resp, before: old})
+                                                    return old
+                                                }, true);
+                                            }
+                                        }}
+                                    >
+                                        Ativar
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => {
                                         const b = confirm('Tem certeza?');
@@ -128,14 +163,9 @@ export default function Reports() {
                                                 }
 
                                                 setLoading(false);
-                                                alert('Banido. Desative a conta no firebase.');
-                                                console.log({ resp, before: old })
-                                                const after = {
-                                                    ...old,
-                                                    reports: old.reports.filter(({ to }) => to.firebaseId !== report.to.firebaseId)
-                                                };
-                                                console.log({ after })
-                                                return after
+                                                alert('Banido.');
+                                                await revalidate();
+                                                return old;
                                             }, true);
                                         }
                                     }}
