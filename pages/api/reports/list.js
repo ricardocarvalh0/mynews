@@ -6,40 +6,58 @@ export default async (req, res) => {
     try {
         const reports = await db
             .collection("userreports")
-            .aggregate([
-                {
-                  $match: { seen: { $ne: true } }
-                },
-                {
-                    $sort: {createdAt: -1}
-                },
-                {
-                    $limit: 50
-                },
-                {
-                    $lookup: {
-                        from: 'userimages',
-                        localField: 'from',
-                        foreignField: 'firebaseId',
-                        as: 'from'
-                    }
-                }, {
-                    $lookup: {
-                        from: 'userimages',
-                        localField: 'to',
-                        foreignField: 'firebaseId',
-                        as: 'to'
-                    }
-                }, {
-                    $unwind: {
-                        path: '$from'
-                    }
-                }, {
-                    $unwind: {
-                        path: '$to'
+            .aggregate([{
+                $match: {
+                    seen: {
+                        $ne: true
                     }
                 }
-            ])
+            }, {
+                $sort: {
+                    createdAt: -1
+                }
+            }, {$limit: 50}, {
+                $lookup: {
+                    from: 'userimages',
+                    localField: 'from',
+                    foreignField: 'firebaseId',
+                    as: 'from'
+                }
+            }, {
+                $lookup: {
+                    from: 'userimages',
+                    localField: 'to',
+                    foreignField: 'firebaseId',
+                    as: 'to'
+                }
+            }, {
+                $unwind: {
+                    path: '$from'
+                }
+            }, {
+                $unwind: {
+                    path: '$to'
+                }
+            }, {
+                $lookup: {
+                    from: 'users',
+                    localField: 'to.firebaseId',
+                    foreignField: 'firebaseId',
+                    as: 'active'
+                }
+            }, {
+                $unwind: {
+                    path: '$active'
+                }
+            }, {
+                $addFields: {
+                    active: '$active.approved'
+                }
+            }, {
+                $match: {
+                    'active': true
+                }
+            }])
             .toArray();
 
         // console.log('found reports', {reports});

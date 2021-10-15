@@ -2,7 +2,7 @@ export default async (req, res) => {
     const b = JSON.parse(req.body);
     console.log('ban user', { b });
     try {
-        const data = await fetch('https://api.comecorda.com/users/remove-data', {
+        const data = await fetch('https://api.comecorda.com/users/disable', {
             method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
@@ -17,12 +17,10 @@ export default async (req, res) => {
 
         if(data.ok) {
             const d = await data.json();
-            console.log('goodattemp', d);
             res.status(200).json({ok: true});
             return;
         }
 
-        console.log('bad attempt', {data});
         res.json({ok: false});
     } catch (err) {
         console.log('api erro', err);

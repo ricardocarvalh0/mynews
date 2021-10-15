@@ -68,6 +68,44 @@ export default function Reports() {
                             <div style={{fontSize: 12}}>{report.to.firebaseId}</div>
                             <div>
                                 <button
+                                    style={{margin: '1rem'}}
+                                    onClick={() => {
+                                        const b = confirm('Tem certeza?');
+                                        if (b) {
+                                            setLoading(true);
+                                            mutate(async old => {
+                                                const res = await fetch(`/api/users/disable`, {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({uid: report.to.firebaseId})
+                                                }).catch(() => old)
+                                                if (!res.ok) {
+                                                    setLoading(false);
+                                                    alert('Deu erro');
+                                                    return old;
+                                                }
+                                                const resp = await res.json();
+                                                if (!resp.ok) {
+                                                    setLoading(false);
+                                                    alert('Deu erro');
+                                                    return old;
+                                                }
+
+                                                setLoading(false);
+                                                alert('Banido. Desative a conta no firebase.');
+                                                console.log({ resp, before: old })
+                                                const after = {
+                                                    ...old,
+                                                    reports: old.reports.filter(({ to }) => to.firebaseId !== report.to.firebaseId)
+                                                };
+                                                console.log({ after })
+                                                return after
+                                            }, true);
+                                        }
+                                    }}
+                                >
+                                    Desativar
+                                </button>
+                                <button
                                     onClick={() => {
                                         const b = confirm('Tem certeza?');
                                         if (b) {
