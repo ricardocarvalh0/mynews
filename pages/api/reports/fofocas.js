@@ -4,12 +4,19 @@ export default async (req, res) => {
     const {db} = await connectToDatabase();
     try {
         const reports = await db
-            .collection("userreports")
+            .collection("postreports")
             .aggregate([{
                 $sort: {
                     createdAt: -1
                 }
             }, {$limit: 50}, {
+                $lookup: {
+                    from: 'posts',
+                    localField: 'post',
+                    foreignField: '_id',
+                    as: 'fofoca'
+                }
+            }, {
                 $lookup: {
                     from: 'userimages',
                     localField: 'from',
@@ -22,6 +29,10 @@ export default async (req, res) => {
                     localField: 'to',
                     foreignField: 'firebaseId',
                     as: 'to'
+                }
+            }, {
+                $unwind: {
+                    path: '$fofoca'
                 }
             }, {
                 $unwind: {
@@ -44,7 +55,8 @@ export default async (req, res) => {
                 }
             }, {
                 $addFields: {
-                    active: '$active.approved'
+                    active: '$active.approved',
+                    fofoca: '$fofoca.content'
                 }
             }])
             .toArray();
